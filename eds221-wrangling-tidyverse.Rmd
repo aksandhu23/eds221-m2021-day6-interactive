@@ -1,0 +1,89 @@
+---
+title: "Data Wrangling in tidyr"
+author: "Amritpal Sandhu"
+date: "2022-08-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+## Read in World Bank (wb) data files
+
+```{r}
+wb_indicators <- read_csv(here::here("data", "wb_indicators.csv"), na = c("..", ""))
+
+# Make the ".." into na's up above and if there is nothing there it should also be na. 
+
+wb_metadata <- read_csv(here::here("data", "wb_indicators_metadata.csv"))
+
+
+```
+
+## Tidy up my data
+
+### pivot_longer to get years into a single column
+
+```{r}
+# Look up names(wb_indicators) in the console to get the exact names for the columns
+
+wb_indicators_long <- wb_indicators |> 
+  pivot_longer(cols = '2001 [YR2001]' : '2020 [YR2020]',
+               names_to = "year", 
+               values_to = "indicator_value")
+
+# You can also check class of year by: class(wb_indicators_long$year)
+
+```
+
+### Separate to clean up the year column
+
+#### You can also pipe through the whole this if you wanted, but we are breaking it up for now
+
+```{r}
+wb_clean <- wb_indicators_long |>
+  separate(col = year, into = c("year", "year_chr"), sep = " ") |> 
+  select(-year_chr, -'Country Code', -'Series Code') |>
+  mutate(year = as.numeric(year)) |>
+  drop_na('Series Name') |> 
+  pivot_wider(names_from = 'Series Name', values_from = indicator_value)
+
+# The select function helped remove the columns we don't want and then mutate changed the year values to numeric. drop_na means any row with na can be dropped and this is used for rows. 
+  
+# Next we widen the variables currently trapped in the 'Series Name" to be spread across multiple columns, and get the values that populated the columns from 'indicator value'
+
+
+# Rename the columns 
+
+names(wb_clean) <- c("country", "year", "acess_clean_fuels_pp", "access_electricity_pp", "co2_emissions_kt", "fossil_fuel_cons_pct", "water stress")
+
+wb_clean_2 <- wb_clean |> rename(my_year = year)
+
+wb_subset <- wb_clean |>
+  filter(country %in% c("Algeria", "Barbados", "Bulgaria", "Chile"))
+
+# Then you can check unique in the console to check if you filtered correctly: unique(wb_subset)
+
+# Make a ggplot
+
+ggplot(data = wb_subset, aes(x = year, 
+                             y = co2_emissions_kt, group = country)) + geom_line() + facet_wrap(~country)
+
+# You can also group through geom_line(aes(color = country))
+```
+
+```{r}
+# The ! means to exclude 
+
+
+wb_clean_2 <- wb_indicators_long |>
+  separate(col = 'year', into = c("year", "year_chr"), sep = " ")
+```
+
