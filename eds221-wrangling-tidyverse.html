@@ -424,9 +424,11 @@ breaking it up for now</h4>
 
 # Rename the columns 
 
-names(wb_clean) &lt;- c(&quot;country&quot;, &quot;year&quot;, &quot;acess_clean_fuels_pp&quot;, &quot;access_electricity_pp&quot;, &quot;co2_emissions_kt&quot;, &quot;fossil_fuel_cons_pct&quot;, &quot;water stress&quot;)
+names(wb_clean) &lt;- c(&quot;country&quot;, &quot;year&quot;, &quot;acess_clean_fuels_pp&quot;, &quot;access_electricity_pp&quot;, &quot;co2_emissions_kt&quot;, &quot;fossil_fuel_cons_pct&quot;, &quot;water_stress&quot;)
 
 wb_clean_2 &lt;- wb_clean |&gt; rename(my_year = year)
+
+
 
 wb_subset &lt;- wb_clean |&gt;
   filter(country %in% c(&quot;Algeria&quot;, &quot;Barbados&quot;, &quot;Bulgaria&quot;, &quot;Chile&quot;))
@@ -446,6 +448,260 @@ ggplot(data = wb_subset, aes(x = year,
 wb_clean_2 &lt;- wb_indicators_long |&gt;
   separate(col = &#39;year&#39;, into = c(&quot;year&quot;, &quot;year_chr&quot;), sep = &quot; &quot;)</code></pre>
 </div>
+</div>
+</div>
+<div id="filtering-rows" class="section level2">
+<h2>Filtering Rows</h2>
+<pre class="r"><code># Example 1: Filter to keep exact matches
+
+# Height greater than 180 
+ex_1 &lt;- starwars |&gt;
+  filter(height &gt; 180)
+
+min(ex_1$height)</code></pre>
+<pre><code>## [1] 182</code></pre>
+<pre class="r"><code>## Use double equal to get exact value
+
+ex_2 &lt;- starwars |&gt;
+  filter(eye_color == &quot;blue&quot;)
+
+unique(ex_2$eye_color)</code></pre>
+<pre><code>## [1] &quot;blue&quot;</code></pre>
+<pre class="r"><code># Make a subset that only contains rows where the homeworld is Naboo
+
+ex_3 &lt;- starwars |&gt;
+  filter(homeworld == &quot;Naboo&quot;)</code></pre>
+</div>
+<div id="examples-filtering-to-satisfy-multiple-examples" class="section level2">
+<h2>Examples: filtering to satisfy multiple examples</h2>
+<pre class="r"><code># Height greater than 180 and homeworld is tatooine
+
+ex_4 &lt;- starwars |&gt;
+  filter(height &gt; 180 &amp; homeworld == &quot;Tatooine&quot;)</code></pre>
+<pre class="r"><code># Create a subset where hair color brown and species is human 
+
+ex_5 &lt;- starwars |&gt;
+  filter(hair_color == &quot;brown&quot; &amp; species == &quot;Human&quot;)</code></pre>
+<pre class="r"><code># Filtering OR statements
+
+ex_6 &lt;- starwars |&gt;
+  filter(height &gt; 180 | eye_color == &quot;yellow&quot;)</code></pre>
+<pre class="r"><code># Create a subset that keeps rows if homeworld is Endor or species is droid
+
+ex_7 &lt;- starwars |&gt;
+  filter(homeworld == &quot;Endor&quot; | species == &quot;Droid&quot;)</code></pre>
+<pre class="r"><code>ex_8 &lt;- starwars |&gt;
+  filter(eye_color == &quot;blue&quot; | eye_color == &quot;brown&quot; | eye_color == &quot;red&quot;)
+
+## Another way to do this is through in operator
+
+ex_9 &lt;- starwars |&gt;
+  filter(eye_color %in% c(&quot;blue&quot;, &quot;brown&quot;, &quot;red&quot;))
+
+# NEVER do this because double equal only asks to match values in the order that you have written. Only use if looking for a single exact match  
+
+ex_10 &lt;- starwars |&gt;
+  filter(eye_color == c(&quot;blue&quot;, &quot;brown&quot;, &quot;red&quot;))</code></pre>
+<pre class="r"><code># Create a subset where homeworld is Endor OR Tatooine OR Naboo AND height &lt; 150
+
+ex_11 &lt;- starwars |&gt;
+  filter(homeworld %in% c(&quot;Endor&quot;, &quot;Tatooine&quot;, &quot;Naboo&quot;),
+         height &lt; 150)</code></pre>
+<pre class="r"><code># All species except human
+ex_12 &lt;- starwars |&gt;
+  filter(species != &quot;Human&quot;)
+
+# All species except human, ewok, and wookie
+
+ex_13 &lt;- starwars |&gt; 
+  filter(!species %in% c(&quot;Human&quot;, &quot;Ewok&quot;, &quot;Wookie&quot;))</code></pre>
+</div>
+<div id="select-select-or-exclude-columns" class="section level2">
+<h2><code>select()</code> : select or exclude columns</h2>
+<pre class="r"><code># Select by name
+
+ex_14 &lt;- wb_clean |&gt;
+  select(country, year, co2_emissions_kt)
+
+ex_15 &lt;- wb_clean |&gt;
+  select(year:fossil_fuel_cons_pct)
+
+# Exclude the electricity 
+
+ex_16 &lt;- wb_clean |&gt;
+  select(year:fossil_fuel_cons_pct, -access_electricity_pp)</code></pre>
+<pre class="r"><code># Filter the countries and all the columns from country to fossil fuel
+
+ex_17 &lt;- wb_clean |&gt;
+  filter(country %in% c(&quot;Bolivia&quot;, &quot;Chile&quot;, &quot;Mexico&quot;)) |&gt;
+  select(country:fossil_fuel_cons_pct)</code></pre>
+<pre class="r"><code># Change the column names
+
+ex_18 &lt;- wb_clean |&gt;
+  select(year_new = year,
+         emissions = co2_emissions_kt, 
+         country_name = country)
+
+# Select only columns from country, year, and water stress, and reorder them as year, country, water stress, then filter to only include observations for three countries of your choosing. 
+
+ex_19 &lt;- wb_clean |&gt;
+  select(year, country, water_stress) |&gt;
+  filter(country %in% c(&quot;Australia&quot;, &quot;Aruba&quot;, &quot;Lebanon&quot;))
+
+# Check the filter for country
+unique(ex_19$country)</code></pre>
+<pre><code>## [1] &quot;Aruba&quot;     &quot;Australia&quot; &quot;Lebanon&quot;</code></pre>
+<pre class="r"><code># only renaming 2 of the columns. Remember new name = old name
+
+ex_20 &lt;- wb_clean |&gt;
+  rename(ffcp = fossil_fuel_cons_pct,
+         ws = water_stress)</code></pre>
+<pre class="r"><code># rename 2 columns
+
+ex_21 &lt;- wb_clean |&gt;
+  rename(co2 = co2_emissions_kt, 
+         the_country = country)</code></pre>
+<div id="mutate-update-an-existing-column-or-add-a-new-one" class="section level3">
+<h3><code>mutate()</code> : update an existing column, or add a new
+one</h3>
+<p>If you assign a NEW column name, it will add a new column to the end
+of your data frame. If you assign an existing column name, it will
+overwrite that column.</p>
+<pre class="r"><code># Create new column, add another column and include the calculation 
+
+ex_22 &lt;- wb_clean |&gt;
+  mutate(co2_emissions_t = co2_emissions_kt * 1000) |&gt; relocate(co2_emissions_t, .after = co2_emissions_kt)
+
+ex_23 &lt;- wb_clean |&gt;
+  mutate(yay = &quot;YAY&quot;)
+
+# Changed class to character 
+
+ex_24 &lt;- wb_clean |&gt;
+  mutate(year = as.character(year))
+
+# Change back to numeric
+
+ex_25 &lt;- ex_24 |&gt;
+  mutate(year = as.numeric(year))
+
+# Use dplyr::relocate()
+# Moving water stress next to the year column in the table
+ex_26 &lt;- wb_clean |&gt;
+  relocate(water_stress, .after = year)</code></pre>
+</div>
+<div id="group_by-summarize" class="section level3">
+<h3><code>group_by |&gt; summarize</code></h3>
+<p>group_by: Creates groups under the hood based in variables you</p>
+<p>summarize: apply your functions to EACH GROUP, and return them into a
+nice table</p>
+<pre class="r"><code># We are just looking at species and looking for the mean height and mass
+
+ex_27 &lt;- starwars |&gt;
+  group_by(species) |&gt;
+  summarize(mean_height = mean(height, na.rm = TRUE),
+            mean_mass = mean(mass, na.rm = TRUE))
+
+# We want to add the filter through home
+
+ex_28 &lt;- starwars |&gt;
+  filter(homeworld %in% c(&quot;Naboo&quot;, &quot;Tatooine&quot;)) |&gt;
+  group_by(species) |&gt;
+  summarize(mean_height = mean(height, na.rm = TRUE),
+            mean_mass = mean(mass, na.rm = TRUE))</code></pre>
+<pre class="r"><code># Make a data frame
+
+df &lt;- tribble(
+  ~species, ~length, ~number,
+  &quot;lobster&quot;, 12, 4, 
+  &quot;lobster&quot;, 14, 6, 
+  &quot;lobster&quot;, 15, 2
+)
+
+# Make sure every observation has it&#39;s own row
+
+df_case &lt;- df |&gt;
+  uncount(number)</code></pre>
+<pre class="r"><code># count counts obervations
+# combination of group_by summarize n()
+
+starwars |&gt;
+  count(homeworld)</code></pre>
+<pre><code>## # A tibble: 49 × 2
+##    homeworld          n
+##    &lt;chr&gt;          &lt;int&gt;
+##  1 Alderaan           3
+##  2 Aleen Minor        1
+##  3 Bespin             1
+##  4 Bestine IV         1
+##  5 Cato Neimoidia     1
+##  6 Cerea              1
+##  7 Champala           1
+##  8 Chandrila          1
+##  9 Concord Dawn       1
+## 10 Corellia           2
+## # … with 39 more rows
+## # ℹ Use `print(n = ...)` to see more rows</code></pre>
+<pre class="r"><code>starwars |&gt;
+  count(homeworld, species)</code></pre>
+<pre><code>## # A tibble: 58 × 3
+##    homeworld      species       n
+##    &lt;chr&gt;          &lt;chr&gt;     &lt;int&gt;
+##  1 Alderaan       Human         3
+##  2 Aleen Minor    Aleena        1
+##  3 Bespin         Human         1
+##  4 Bestine IV     Human         1
+##  5 Cato Neimoidia Neimodian     1
+##  6 Cerea          Cerean        1
+##  7 Champala       Chagrian      1
+##  8 Chandrila      Human         1
+##  9 Concord Dawn   Human         1
+## 10 Corellia       Human         2
+## # … with 48 more rows
+## # ℹ Use `print(n = ...)` to see more rows</code></pre>
+<pre class="r"><code>starwars |&gt;
+  group_by(homeworld, species)|&gt;
+  summarize (size = n())</code></pre>
+<pre><code>## # A tibble: 58 × 3
+## # Groups:   homeworld [49]
+##    homeworld      species    size
+##    &lt;chr&gt;          &lt;chr&gt;     &lt;int&gt;
+##  1 Alderaan       Human         3
+##  2 Aleen Minor    Aleena        1
+##  3 Bespin         Human         1
+##  4 Bestine IV     Human         1
+##  5 Cato Neimoidia Neimodian     1
+##  6 Cerea          Cerean        1
+##  7 Champala       Chagrian      1
+##  8 Chandrila      Human         1
+##  9 Concord Dawn   Human         1
+## 10 Corellia       Human         2
+## # … with 48 more rows
+## # ℹ Use `print(n = ...)` to see more rows</code></pre>
+</div>
+<div id="practice-example" class="section level3">
+<h3>Practice example:</h3>
+<ul>
+<li>Start from wb_clean Only keep observations for Nicaragua, Ecuador,
+Peru, and Chile, AND for years greater than 2005</li>
+<li>Only keep columns for every country, year and co2 emissions</li>
+<li>Add a new column that is co2 emissions converted to megatons</li>
+<li>Find the total co2 emissions in megatons for years still in the
+dataset by country</li>
+</ul>
+<pre class="r"><code>ex_29 &lt;- wb_clean |&gt;
+  filter(country %in% c(&quot;Nicaragua&quot;, &quot;Ecuador&quot;, &quot;Peru&quot;, &quot;Chile&quot;), year &gt; 2005) |&gt; 
+  select(country, year, co2_emissions_kt) |&gt;
+  mutate(co2_emissions_mt = co2_emissions_kt / 1000) |&gt;
+  group_by(country) |&gt;
+  summarize(total_co2_mt = sum(co2_emissions_mt), na.rm = TRUE)
+
+unique(ex_29$country)</code></pre>
+<pre><code>## [1] &quot;Chile&quot;     &quot;Ecuador&quot;   &quot;Nicaragua&quot; &quot;Peru&quot;</code></pre>
+<pre class="r"><code>min(ex_29$year)</code></pre>
+<pre><code>## Warning: Unknown or uninitialised column: `year`.</code></pre>
+<pre><code>## Warning in min(ex_29$year): no non-missing arguments to min; returning Inf</code></pre>
+<pre><code>## [1] Inf</code></pre>
 </div>
 </div>
 
